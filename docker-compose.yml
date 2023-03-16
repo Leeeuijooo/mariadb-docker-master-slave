@@ -1,0 +1,40 @@
+version: "3.7"
+
+services:
+  db_master:
+    image: mariadb:10.7.1
+    container_name: db_master
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_password
+    volumes:
+      - ./master/data:/var/lib/mysql
+      - ./master/config/:/etc/mysql/conf.d
+      - ./master/mysql-init-files/:/docker-entrypoint-initdb.d/
+    ports:
+      - "33306:3306"
+    secrets:
+      - mariadb_root_password
+
+  db_slave:
+    image: mariadb:10.7.1
+    container_name: db_slave
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mariadb_root_password
+    volumes:
+      - ./slave/data:/var/lib/mysql
+      - ./slave/config/:/etc/mysql/conf.d
+      - ./slave/mysql-init-files/:/docker-entrypoint-initdb.d/
+    ports:
+      - "43306:3306"
+    secrets:
+      - mariadb_root_password
+    depends_on:
+      - db_master
+    links:
+      - db_master    
+
+secrets:
+  mariadb_root_password:
+    file: ./mariadb_root_password.txt
